@@ -1,0 +1,4 @@
+# Clone stan Math repo https://github.com/stan-dev/math - this comes with all the dependencies, boost, eigen, sundials etc
+# Clone stan repo https://github.com/stan-dev/stan
+## build with this line, I use eclipse but can easily conjure up a make file with this. replacing "C:\Work\Software\stan" with STAN_LOCATION and "C:\Work\Software\stan\lib\stan_math" with STAN_MATH_LOCATION
+g++ -std=c++1y -I"C:\Work\Software\stan" -I"C:\Work\Software\STAN_models\integratestan\SimpleModel\src\Model" -I"C:\Work\Software\stan\src" -I"C:\Work\Software\stan\lib\stan_math\lib\boost_1.66.0" -I"C:\Work\Software\stan\lib\stan_math\lib\eigen_3.3.3" -I"C:\Work\Software\stan\lib\stan_math" -I"C:\Work\Software\stan\lib\stan_math\lib\sundials_3.1.0\include" -O0 -g -Wall -c -fmessage-length=0 -MMD -MP -MF"src/SimpleModel.d" -MT"src/SimpleModel.o" -o "src/SimpleModel.o" "../src/SimpleModel.cpp"
