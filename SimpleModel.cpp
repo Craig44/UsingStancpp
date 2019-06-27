@@ -7,6 +7,8 @@
 //============================================================================
 
 #include <iostream>
+#include <sstream>
+
 #include <stan/model/model_header.hpp>
 #include <stan/model/finite_diff_grad.hpp>
 
@@ -75,7 +77,7 @@ int main() {
 
 
 
-
+  /*
 
   vector<double> unconstrained_params_r = params_r;
   vector<double> unconstrained_start_vals = start_vals;
@@ -212,7 +214,7 @@ int main() {
   for(auto val:check_results)
     cout << val << " ";
   cout << "\n";
-
+*/
   ////////////////////////
   // Do an MCMC
   ////////////////////////
@@ -222,6 +224,7 @@ int main() {
   * metric without adaptation.
   * following services/samples/hmc_nuts_unit_e.hpp
   */
+  /*
   stan::mcmc::unit_e_nuts<model_8schools, boost::ecuyer1988> sampler(my_8schools_model, base_rng__);
 
   sampler.set_nominal_stepsize(0.1);
@@ -311,6 +314,7 @@ int main() {
   stan::optimization::BFGSLineSearch<model_linear,stan::optimization::LBFGSUpdate<> > linear_lbfgs(my_linear_model, params_r, params_i, &out);
   linear_lbfgs._conv_opts.tolRelGrad =  1e+7;
 
+
   cout << "about to check step()\n\n";
   ret = 0;
   while (ret == 0) {
@@ -331,6 +335,52 @@ int main() {
     std::cout << current_f[i] << " ";
   }
   cout << "\nWhen fitting answer in R we get  2.069 2.333\n";
+*/
+
+
+
+  ////////---------------///////////////
+  // The var.hpp class doesn't have a iostream << operator, so I am learning how to overload
+  // we need this in Casal2 because we use boosts lexical casts in the Utilities\To.h file
+  // I was reading that this needs both << and >> operators.
+  Double x1 = 3234.2;
+  cout << "x1 = " << x1 << endl;
+
+  Double x2;
+  cout << "is uninitialised = " << x2.is_uninitialized() << "\n";
+  x2 = 3234.2;
+  cout << "x2 = " << x2 << endl;
+  cout << "is uninitialised = " << x2.is_uninitialized() << "\n";
+
+  // change the number
+  x2 = 23.2;
+  cout << "x2 is now = " << x2 << endl;
+
+
+  x2 += 23;
+
+  cout << "x2 = " << x2 << endl;
+
+  cout << "assign a string\n";
+
+  std::string str = "12.4";
+
+  cout << str << "\n";
+
+  std::istringstream iss (str);
+
+  double val;
+  iss >> val;
+  cout << "val " << val << "\n";
+
+  cout << "cannot assing...\n";
+
+  Double x3;
+  cout << "is uninitialised = " << x3.is_uninitialized() << "\n";
+  cout << "The complex object is ";
+  //iss >> x3;
+  //x3+= 10;
+  cout <<"\n"<< x3 << "\n";
 
 
 /*
