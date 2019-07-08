@@ -34,6 +34,7 @@
 #include "linearRegression.hpp"
 #include "TemplateTest.h"
 #include "AltTemplateTest.hpp"
+#include <map>
 #define INF std::numeric_limits<double>::max()
 
 using namespace niwa;
@@ -42,6 +43,7 @@ using namespace model_linear_namespace;
 
 using std::cout;
 using std::endl;
+using std::map;
 
 typedef stan::math::var Double;
 
@@ -65,7 +67,8 @@ int main() {
   vector<double> params_r{9.694172, 9362.184, 2.236103e-03,  1.000133e-04, -1.074730e-03, -6.707788e-06, -8.611242e-04, -6.474332e-04,  1.168012e-03,  5.272521e-04};
   //vector<double> start_vals{5, 6000, 0, 0, 0, 0, 0, 0, 0, 0};
   vector<double> start_vals{1.696269, 0.1683022, 0.0205084845,  0.0109040206, -0.0026786834,  0.0078936656, -0.0053568727, -0.0000117153, 0.0289505637,  0.0055900884};
-/*
+
+  /*
   double init_radius = 2.0;
   stan::callbacks::logger logger;
   stan::callbacks::writer init_writer;
@@ -77,7 +80,7 @@ int main() {
 
 
 
-  /*
+
 
   vector<double> unconstrained_params_r = params_r;
   vector<double> unconstrained_start_vals = start_vals;
@@ -214,7 +217,7 @@ int main() {
   for(auto val:check_results)
     cout << val << " ";
   cout << "\n";
-*/
+
   ////////////////////////
   // Do an MCMC
   ////////////////////////
@@ -224,7 +227,7 @@ int main() {
   * metric without adaptation.
   * following services/samples/hmc_nuts_unit_e.hpp
   */
-  /*
+
   stan::mcmc::unit_e_nuts<model_8schools, boost::ecuyer1988> sampler(my_8schools_model, base_rng__);
 
   sampler.set_nominal_stepsize(0.1);
@@ -246,6 +249,7 @@ int main() {
   }
   cout << "\n";
 
+/*
   stan::services::util::run_sampler(sampler, my_8schools_model, cont_vector, num_warmup, num_samples,
                     num_thin, refresh, save_warmup, base_rng__, interrupt_test, logger,
                     parameter, diagnostic);
@@ -279,15 +283,17 @@ int main() {
     outFile  << "\n";
   }
 
+*/
 
   cout << "\n\n\n----------------------------------------------\n";
   cout << "--------------Linear regression section--------\n";
   cout << "----------------------------------------------\n";
 
-  vector<double> X = {8.8,15.4,51.2,21.4,22.6,54.3,29.2,5.3,6.3,11.1,44.5,27.2,28,22.2,8.9,55.7,30,19.3,34,10.5,1.4,15.6,0.5,5.4,7.5,13.7,36.8,23.1,2.8,45.1,28.5,14.1,37.9,37.6,36.4,33.8,31.1,18.8,13.9,12.4,6.1,15.8,5.3,63.4,44.2,2.5,11.9,10.7,35.6,18.3};
-  vector<double> Y = {23.67,36.05,119.67,65.28,50.75,143.87,51.82,19.08,16.41,28.65,108.58,58.51,62.22,41.2,9.5,133.96,75.4,46.06,89.91,47.18,-1.74,11.73,12.43,5.25,10.4,43.53,83.34,41.11,8.85,104.35,67.08,37.51,84.98,95.31,83.1,83.02,85.02,49.05,29.31,41.83,25.4,43.26,15.32,141.85,118.54,-0.35,51.95,42.02,81.07,31.99};
-  double linear_sigma = 10.87;
-  model_linear my_linear_model(&std::cout, random_seed, Y, X, linear_sigma);
+  vector<Double> X = {8.8,15.4,51.2,21.4,22.6,54.3,29.2,5.3,6.3,11.1,44.5,27.2,28,22.2,8.9,55.7,30,19.3,34,10.5,1.4,15.6,0.5,5.4,7.5,13.7,36.8,23.1,2.8,45.1,28.5,14.1,37.9,37.6,36.4,33.8,31.1,18.8,13.9,12.4,6.1,15.8,5.3,63.4,44.2,2.5,11.9,10.7,35.6,18.3};
+  vector<Double> Y = {23.67,36.05,119.67,65.28,50.75,143.87,51.82,19.08,16.41,28.65,108.58,58.51,62.22,41.2,9.5,133.96,75.4,46.06,89.91,47.18,-1.74,11.73,12.43,5.25,10.4,43.53,83.34,41.11,8.85,104.35,67.08,37.51,84.98,95.31,83.1,83.02,85.02,49.05,29.31,41.83,25.4,43.26,15.32,141.85,118.54,-0.35,51.95,42.02,81.07,31.99};
+  Double linear_sigma = 10.87;
+
+  model_linear* my_linear_model = new model_linear(&std::cout, random_seed, Y, X, linear_sigma);
   cout << "succefully constructed my linear regression class\n";
   // use MLE estimates from Stan
   params_r = {0.324,  1.34};
@@ -301,9 +307,17 @@ int main() {
   cont_vector.resize(params_r.size(),0.0);
   cout << "\nStarting values for a and b = " << params_r[0] << " & " << params_r[1] << "\n";
 
-  Double val = my_linear_model.log_prob<true,false,Double>(params_r_, params_i, msgs);
+  Double val = my_linear_model->log_prob<true,false,Double>(params_r_, params_i, msgs);
+
+  val.grad();
+  stan::math::print_stack(std::cout);
+
+  for (unsigned i = 0; i < params_r_.size(); ++i) {
+    std::cout << "val " << params_r_[i].val() << " adj = " << params_r_[i].adj() << endl;
+  }
+
   cout << "val = " << val.val() << " should be -362.166 \n";
-  log_p_grad = stan::model::log_prob_grad<false, true, model_linear>(my_linear_model, params_r, params_i, gradient, msgs);
+  log_p_grad = stan::model::log_prob_grad<false, true, model_linear>((*my_linear_model), params_r, params_i, gradient, msgs);
   cout << "log_p_grad " << log_p_grad << " should be -362.166 \n";
   cout << "gradient by value \n";
   vector<double> actual_grad = {10.2889, 337.994};
@@ -311,7 +325,9 @@ int main() {
     std::cout << gradient[i] << " (" << actual_grad[i] << ") ";
   }
   cout << "\n";
-  stan::optimization::BFGSLineSearch<model_linear,stan::optimization::LBFGSUpdate<> > linear_lbfgs(my_linear_model, params_r, params_i, &out);
+
+
+  stan::optimization::BFGSLineSearch<model_linear,stan::optimization::LBFGSUpdate<> > linear_lbfgs((*my_linear_model), params_r, params_i, &out);
   linear_lbfgs._conv_opts.tolRelGrad =  1e+7;
 
 
@@ -335,7 +351,27 @@ int main() {
     std::cout << current_f[i] << " ";
   }
   cout << "\nWhen fitting answer in R we get  2.069 2.333\n";
-*/
+
+
+
+  // Test map utility with var class
+  map<unsigned, Double> test_map_;
+  Double x1 = 3234.2;
+  unsigned start_year = 1990;
+  cout << test_map_.size() << "\n";
+  test_map_[start_year] = x1;
+  cout << test_map_.size() << " val = " << test_map_[start_year] <<  "\n";
+
+
+  // Test passing values by reference
+  cout << "value by reference " << endl;
+  Double x2;
+  auto& ref_x2 = x2;
+
+  ref_x2 = 1.0;
+  cout << ref_x2 << "\n";
+
+
 
 
 
@@ -343,6 +379,7 @@ int main() {
   // The var.hpp class doesn't have a iostream << operator, so I am learning how to overload
   // we need this in Casal2 because we use boosts lexical casts in the Utilities\To.h file
   // I was reading that this needs both << and >> operators.
+  /*
   Double x1 = 3234.2;
   cout << "x1 = " << x1 << endl;
 
@@ -378,18 +415,20 @@ int main() {
   Double x3;
   cout << "is uninitialised = " << x3.is_uninitialized() << "\n";
   cout << "The complex object is ";
-  //iss >> x3;
-  //x3+= 10;
+  x3 = val;
+  cout <<"\n"<< x3 << "\n";
+
+  x3+= 10;
   cout <<"\n"<< x3 << "\n";
 
 
-/*
+
   TemplateTest my_test;
   double test_val = 213.23;
   double test_result = my_test.test(test_val);
   cout << test_result << "\n";
-*/
-/*
+
+
 
   AltTemplateTest alt_my_test;
   var alt_test_val(213.23);

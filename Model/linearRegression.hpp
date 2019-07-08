@@ -41,12 +41,30 @@ namespace niwa {
       return reader;
     }
 
+/*
+    // Mimick the estimate manager.
+    class parameters {
+    public:
+      parameters(vector<Double> start_vals) {};
+      virtual                         ~parameters() {};
+      Double                      value() { return *target_; }
+    protected:
+      vector<Double>*                     target_ = nullptr;
+    };
+*/
+
+
     class model_linear { // See if we can override without inheriting from the class prob_grad
     private:
       int N_; // number of observatiosn
-      double sigma_;
-      vector<double> y_; // observerd
-      vector<double> x_; // expected
+      Double sigma_;
+      vector<Double> y_; // observerd
+      vector<Double> x_; // expected
+      // replicate how Casal2 handles parameters so I am confident everything can be done.
+      Double         a_;
+      Double         b_;
+      Double*        a_target_ = &a_;
+      Double*        b_target_ = &b_;
 
     protected:
       size_t num_params_r__;
@@ -54,7 +72,7 @@ namespace niwa {
     public:
 
       // My custom functions
-      model_linear(std::ostream* pstream__, unsigned int random_seed__, vector<double> y, vector<double> x, double sigma) :
+      model_linear(std::ostream* pstream__, unsigned int random_seed__, vector<Double> y, vector<Double> x, Double sigma) :
         y_(y), x_(x), sigma_(sigma),num_params_r__(2),  param_ranges_i__(std::vector<std::pair<int, int> >(0)) {
         my_ctor_body(random_seed__, pstream__),
         N_ = y.size();
@@ -127,6 +145,17 @@ namespace niwa {
         return y_hat;
       }
 
+      // More like Casal2's handling of parameters, using pointers
+      vector<Double> alt_calc_sse() const {
+        vector<Double> y_hat(N_,0.0);
+        Double SSE = 0.0;
+        for(unsigned i = 0; i < N_; ++i) {
+            y_hat[i] = a_ + b_ * x_[i];
+            //std::cout << "i = " << i << " yhat = " <<  y_hat[i] << " x = " <<  x_[i] <<  " should be " << 0.324 + 1.34 * x_[i] <<  "\n";
+            SSE += (y_[i] - y_hat[i]) * y_[i] - y_hat[i];
+        }
+        return y_hat;
+      }
       // Return Log_prob an easy class to change probably the key class
       template<bool propto__, bool jacobian__, typename T__>
       T__ log_prob(vector<T__>& params_r__, vector<int>& params_i__,
@@ -142,10 +171,15 @@ namespace niwa {
           vals.push_back(val); // the grad function has params_r__ as a vector of stan::math::var objects.
         }
         */
+        *a_target_ = params_r__[0];
+        *b_target_ = params_r__[1];
         for (unsigned i = 0; i < params_r__.size(); ++i)
           std::cout << params_r__[i] << " ";
-        std::cout << "\n";
-        val = calc_sse(params_r__);
+        std::cout << "- log_prob\n";
+
+        val = alt_calc_sse();
+
+        //val = calc_sse(params_r__);
         lp_accum__.add(normal_log(y_, val, sigma_));
         return lp_accum__.sum();
         /*
